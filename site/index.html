@@ -11,8 +11,7 @@
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="theme-color" content="#eff1f4" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#800000" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="PBI Score" />
@@ -26,29 +25,50 @@
 </script>
 <style>
 /* ───────────────────────── tokens ───────────────────────── */
+/* EB Garamond (SIL Open Font License, fonts/OFL.txt), bundled so the page makes
+   no third-party requests and works offline. */
+@font-face {
+  font-family: "EB Garamond";
+  src: url("fonts/EBGaramond.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("fonts/EBGaramond-Italic.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
-  --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  color-scheme: light dark;
+  --serif: "EB Garamond", "Adobe Garamond Pro", Garamond, Georgia, serif;
+  --sans: var(--serif);
   --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  --serif: Charter, "Iowan Old Style", Cambria, Georgia, serif;
 
-  --ground:    #eff1f4;
-  --surface:   #ffffff;
-  --surface-2: #e7eaef;
-  --ink:       #13181f;
-  --ink-2:     #475261;
-  --ink-3:     #78828f;
-  --line:      #d4d9e1;
-  --line-2:    #bcc3ce;
-  --accent:    #0e7c86;
-  --accent-bg: #0e7c8614;
-  --on-accent: #ffffff;
+  --ground:     #f4f4f2;
+  --surface:    #ffffff;
+  --surface-2:  #efefed;
+  --ink:        #333333;   /* UChicago Footer Grey */
+  --ink-2:      #555555;
+  --ink-3:      #6b6b6b;   /* Dark Greystone, deepened for small text */
+  --line:       #d9d9d9;   /* Light Greystone */
+  --line-2:     #bdbdbb;
+  --accent:     #800000;   /* Phoenix Maroon: fills */
+  --accent-ink: #800000;   /* maroon used as text, outlines, checkmarks */
+  --accent-bg:  #80000010;
+  --on-accent:  #ffffff;
 
-  --sev-0: #64748b;
-  --sev-1: #a9700f;
-  --sev-2: #bc551c;
-  --sev-3: #a42427;
+  /* severity: Dark Greystone, Goldenrod, Dark Terracotta, crimson.
+     Crimson rather than maroon so "very high" never reads as the brand color. */
+  --sev-0: #6b6b6b;
+  --sev-1: #8f6400;
+  --sev-2: #a9431e;
+  --sev-3: #c8102e;
 
-  --shadow: 0 1px 2px #13181f0d, 0 8px 24px -16px #13181f24;
+  --shadow: 0 1px 2px #3333330d, 0 8px 24px -16px #33333324;
 
   --r: 3px;
   --tr: 140ms cubic-bezier(.3,.7,.4,1);
@@ -56,63 +76,75 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ground:    #0e1116;
-    --surface:   #161b22;
-    --surface-2: #1d232c;
-    --ink:       #e4e8ee;
-    --ink-2:     #a2adbb;
-    --ink-3:     #76818f;
-    --line:      #272e38;
-    --line-2:    #39424e;
-    --accent:    #3fb8c4;
-    --accent-bg: #3fb8c41f;
-    --on-accent: #0e1116;
+    color-scheme: dark;
+  --ground:     #121211;
+  --surface:    #1b1a19;
+  --surface-2:  #252423;
+  --ink:        #ebebea;
+  --ink-2:      #b5b5b3;
+  --ink-3:      #8e8e8c;
+  --line:       #2e2d2b;
+  --line-2:     #454442;
+  --accent:     #800000;
+  --accent-ink: #d39c9c;   /* maroon is too dark to read on dark; muted rose instead */
+  --accent-bg:  #d39c9c1a;
+  --on-accent:  #ffffff;
 
-    --sev-0: #8b97a8;
-    --sev-1: #d9a040;
-    --sev-2: #e07a45;
-    --sev-3: #e2585c;
+  --sev-0: #a6a6a6;   /* Greystone */
+  --sev-1: #eaaa00;   /* Goldenrod */
+  --sev-2: #de7c00;   /* Terracotta */
+  --sev-3: #ff6a5c;
 
-    --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
+  --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
   }
 }
 
 /* viewer toggle must win over the media query, in both directions */
 :root[data-theme="dark"] {
-  --ground:    #0e1116;
-  --surface:   #161b22;
-  --surface-2: #1d232c;
-  --ink:       #e4e8ee;
-  --ink-2:     #a2adbb;
-  --ink-3:     #76818f;
-  --line:      #272e38;
-  --line-2:    #39424e;
-  --accent:    #3fb8c4;
-  --accent-bg: #3fb8c41f;
-  --on-accent: #0e1116;
-  --sev-0: #8b97a8;
-  --sev-1: #d9a040;
-  --sev-2: #e07a45;
-  --sev-3: #e2585c;
+  color-scheme: dark;
+  --ground:     #121211;
+  --surface:    #1b1a19;
+  --surface-2:  #252423;
+  --ink:        #ebebea;
+  --ink-2:      #b5b5b3;
+  --ink-3:      #8e8e8c;
+  --line:       #2e2d2b;
+  --line-2:     #454442;
+  --accent:     #800000;
+  --accent-ink: #d39c9c;   /* maroon is too dark to read on dark; muted rose instead */
+  --accent-bg:  #d39c9c1a;
+  --on-accent:  #ffffff;
+
+  --sev-0: #a6a6a6;   /* Greystone */
+  --sev-1: #eaaa00;   /* Goldenrod */
+  --sev-2: #de7c00;   /* Terracotta */
+  --sev-3: #ff6a5c;
+
   --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
 }
 :root[data-theme="light"] {
-  --ground:    #eff1f4;
-  --surface:   #ffffff;
-  --surface-2: #e7eaef;
-  --ink:       #13181f;
-  --ink-2:     #475261;
-  --ink-3:     #78828f;
-  --line:      #d4d9e1;
-  --line-2:    #bcc3ce;
-  --accent:    #0e7c86;
-  --accent-bg: #0e7c8614;
-  --on-accent: #ffffff;
-  --sev-0: #64748b;
-  --sev-1: #a9700f;
-  --sev-2: #bc551c;
-  --sev-3: #a42427;
-  --shadow: 0 1px 2px #13181f0d, 0 8px 24px -16px #13181f24;
+  color-scheme: light;
+  --ground:     #f4f4f2;
+  --surface:    #ffffff;
+  --surface-2:  #efefed;
+  --ink:        #333333;   /* UChicago Footer Grey */
+  --ink-2:      #555555;
+  --ink-3:      #6b6b6b;   /* Dark Greystone, deepened for small text */
+  --line:       #d9d9d9;   /* Light Greystone */
+  --line-2:     #bdbdbb;
+  --accent:     #800000;   /* Phoenix Maroon: fills */
+  --accent-ink: #800000;   /* maroon used as text, outlines, checkmarks */
+  --accent-bg:  #80000010;
+  --on-accent:  #ffffff;
+
+  /* severity: Dark Greystone, Goldenrod, Dark Terracotta, crimson.
+     Crimson rather than maroon so "very high" never reads as the brand color. */
+  --sev-0: #6b6b6b;
+  --sev-1: #8f6400;
+  --sev-2: #a9431e;
+  --sev-3: #c8102e;
+
+  --shadow: 0 1px 2px #3333330d, 0 8px 24px -16px #33333324;
 }
 
 /* ───────────────────────── base ───────────────────────── */
@@ -124,30 +156,32 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 17px;
+  line-height: 1.45;
+  font-variant-numeric: lining-nums;
+  font-kerning: normal;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+body { border-top: 5px solid var(--accent); }
 
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 15px;
   font-weight: 500;
-  letter-spacing: .13em;
-  text-transform: uppercase;
+  font-variant-caps: all-small-caps;
+  letter-spacing: .07em;
   color: var(--ink-3);
 }
 
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: lining-nums tabular-nums; }
 
 :where(a):focus-visible,
 :where(button):focus-visible,
 :where(input):focus-visible,
 .opt:has(:focus-visible),
 .drop:has(:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
 }
 
@@ -164,8 +198,8 @@ header.top {
   gap: 16px 24px;
 }
 header.top .titles { flex: 1 1 320px; display: flex; flex-direction: column; gap: 5px; }
-header.top h1 { font-size: 23px; letter-spacing: -.012em; }
-header.top p { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 62ch; }
+header.top h1 { font-size: 34px; font-weight: 500; line-height: 1.1; color: var(--accent-ink); }
+header.top p { margin: 0; color: var(--ink-2); font-size: 16.5px; max-width: 62ch; }
 
 .layout {
   display: grid;
@@ -179,8 +213,8 @@ header.top p { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 62c
 
 .block { display: flex; flex-direction: column; gap: 9px; }
 .block > .block-head { display: flex; flex-direction: column; gap: 2px; }
-.block-head h2 { font-size: 13px; letter-spacing: .01em; }
-.block-head .hint { color: var(--ink-3); font-size: 12.5px; }
+.block-head h2 { font-size: 18px; }
+.block-head .hint { color: var(--ink-3); font-size: 15px; }
 
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 legend { padding: 0; }
@@ -206,19 +240,18 @@ legend { padding: 0; }
   border-color: var(--line-2);
   z-index: 2;
 }
-.opt input { margin: 0; width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+.opt input { margin: 0; width: 15px; height: 15px; accent-color: var(--accent-ink); cursor: pointer; }
 
 .opt .label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.opt .label b { font-weight: 500; font-size: 14px; letter-spacing: -.003em; }
+.opt .label b { font-weight: 500; font-size: 17px; }
 .opt:has(:checked) .label b { font-weight: 600; }
-.opt .label small { color: var(--ink-3); font-size: 12px; line-height: 1.35; }
+.opt .label small { color: var(--ink-3); font-size: 14.5px; line-height: 1.3; }
 
 /* weight readout + proportional bar: the row's own data-ink */
 .weight { display: flex; align-items: center; gap: 9px; }
 .weight .w {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-size: 17px;
   color: var(--ink-3);
   min-width: 2ch;
   text-align: right;
@@ -273,10 +306,8 @@ legend { padding: 0; }
   gap: 10px;
   padding: 0 13px;
   color: var(--ink-3);
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-style: italic;
   white-space: nowrap;
 }
 .datum::before, .datum::after {
@@ -306,16 +337,25 @@ legend { padding: 0; }
 .total { display: flex; flex-direction: column; gap: 10px; }
 .total .figure { display: flex; align-items: baseline; gap: 7px; }
 .total .figure .value {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 54px;
-  line-height: .92;
-  font-weight: 600;
-  letter-spacing: -.035em;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-size: 66px;
+  line-height: .85;
+  font-weight: 500;
   color: var(--band, var(--ink));
   transition: color var(--tr);
 }
-.total .figure .of { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+.total .figure .of { font-size: 17px; font-style: italic; color: var(--ink-3); }
+
+/* raw score leads; rescaled is the secondary reading */
+.total .figures { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+.total .figure.alt { padding-left: 18px; border-left: 1px solid var(--line); }
+.total .figure.alt .value {
+  font-size: 32px;
+  line-height: 1;
+  color: var(--ink-2);
+}
+.total .figure.alt .of { font-size: 15px; }
+.total .fine { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ink-3); }
 
 .band {
   align-self: flex-start;
@@ -326,9 +366,8 @@ legend { padding: 0; }
   border: 1px solid var(--band);
   border-radius: 100px;
   color: var(--band);
-  font-size: 11.5px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: .01em;
   transition: color var(--tr), border-color var(--tr);
 }
 .band::before {
@@ -361,6 +400,14 @@ legend { padding: 0; }
   background: var(--ink-3);
   opacity: .5;
 }
+.axis .unreach {
+  position: absolute;
+  top: -5px; /* .marks sits 5px below the track (axis gap minus its -7px pull-up) */
+  right: 0;
+  height: 7px;
+  border-radius: 0 2px 2px 0;
+  background: var(--surface) repeating-linear-gradient(135deg, var(--line-2) 0 1px, transparent 1px 4px);
+}
 .axis .needle {
   position: absolute;
   top: -4px;
@@ -374,9 +421,9 @@ legend { padding: 0; }
 }
 .axis .scale {
   position: relative;
-  height: 13px;
-  font-family: var(--mono);
-  font-size: 9.5px;
+  height: 15px;
+  font-size: 12px;
+  font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink-3);
 }
 .axis .scale span { position: absolute; transform: translateX(-50%); }
@@ -386,13 +433,13 @@ legend { padding: 0; }
 /* GCS */
 .gcs { display: flex; flex-direction: column; gap: 9px; }
 .gcs .field { display: flex; align-items: center; gap: 10px; }
-.gcs label { font-size: 13px; color: var(--ink-2); }
+.gcs label { font-size: 16px; color: var(--ink-2); }
 .gcs input {
   width: 68px;
   padding: 6px 8px;
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 15px;
+  font-family: var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-size: 18px;
   color: var(--ink);
   background: var(--ground);
   border: 1px solid var(--line-2);
@@ -402,9 +449,9 @@ legend { padding: 0; }
 /* interpretation */
 .notes { display: flex; flex-direction: column; gap: 10px; }
 .note { display: flex; flex-direction: column; gap: 3px; }
-.note p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.note p { margin: 0; font-size: 16px; line-height: 1.4; color: var(--ink); }
 .note p strong { font-weight: 600; }
-.note .src { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.note .src { font-size: 14px; font-variant-caps: all-small-caps; letter-spacing: .06em; color: var(--ink-3); }
 .note.empty p { color: var(--ink-3); }
 
 /* actions */
@@ -413,7 +460,7 @@ button {
   flex: 1;
   padding: 8px 10px;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--ink);
   background: var(--ground);
@@ -436,18 +483,18 @@ button.primary:hover { filter: brightness(1.08); }
   gap: 24px 32px;
 }
 .provenance .col { display: flex; flex-direction: column; gap: 7px; }
-.provenance p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.provenance p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
 .provenance .cite {
   font-family: var(--serif);
-  font-size: 13.5px;
+  font-size: 16.5px;
   line-height: 1.5;
   color: var(--ink);
 }
 .provenance .cite em { font-style: italic; }
-.provenance a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-.provenance dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12.5px; }
+.provenance a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.provenance dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 15px; }
 .provenance dt { color: var(--ink-3); }
-.provenance dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.provenance dd { margin: 0; font-variant-numeric: lining-nums tabular-nums; color: var(--ink); }
 .disclaimer p { color: var(--ink-2); }
 .disclaimer strong { color: var(--ink); font-weight: 600; }
 
@@ -463,20 +510,20 @@ button.primary:hover { filter: brightness(1.08); }
 .views button,
 .views button:hover {
   flex: none;
-  padding: 6px 13px;
+  padding: 5px 14px;
   background: transparent;
   border: 0;
   color: var(--ink-2);
 }
 .views button:hover { color: var(--ink); }
 .views button[aria-selected="true"] {
-  background: var(--surface-2);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 600;
 }
 
 /* ───────────────────────── CSV batch ───────────────────────── */
-code { font-family: var(--mono); font-size: .92em; }
+code { font-family: var(--mono); font-size: .8em; font-variant-caps: normal; letter-spacing: 0; }
 
 .tablebox {
   border: 1px solid var(--line);
@@ -484,28 +531,30 @@ code { font-family: var(--mono); font-size: .92em; }
   background: var(--surface);
   overflow-x: auto;
 }
-.tablebox table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tablebox table { width: 100%; border-collapse: collapse; font-size: 16px; }
 .tablebox th,
 .tablebox td { padding: 7px 12px; text-align: left; vertical-align: baseline; border-top: 1px solid var(--line); }
 .tablebox thead th {
   border-top: 0;
-  font-size: 11.5px;
+  font-size: 15px;
   font-weight: 500;
+  font-variant-caps: all-small-caps;
+  letter-spacing: .06em;
   color: var(--ink-3);
 }
 .tablebox .pts,
-.tablebox .score { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tablebox .score { text-align: right; font-variant-numeric: lining-nums tabular-nums; }
 .tablebox code { white-space: nowrap; }
 
 .fmt tr.grp th {
-  padding-top: 11px;
+  padding-top: 10px;
   background: var(--surface-2);
-  font-size: 12px;
+  font-size: 15.5px;
   font-weight: 600;
 }
-.fmt tr.grp th span { margin-left: 8px; font-weight: 400; color: var(--ink-3); }
+.fmt tr.grp th span { margin-left: 8px; font-weight: 400; font-style: italic; color: var(--ink-3); }
 
-.rules { margin: 2px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 12.5px; display: flex; flex-direction: column; gap: 4px; }
+.rules { margin: 2px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 15.5px; display: flex; flex-direction: column; gap: 4px; }
 
 .sample {
   margin: 0;
@@ -537,11 +586,11 @@ code { font-family: var(--mono); font-size: .92em; }
   transition: background var(--tr), border-color var(--tr);
 }
 .drop:hover { border-color: var(--ink-3); }
-.drop.over { border-color: var(--accent); border-style: solid; background: var(--accent-bg); }
+.drop.over { border-color: var(--accent-ink); border-style: solid; background: var(--accent-bg); }
 .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.drop b { font-size: 13.5px; font-weight: 600; color: var(--accent); }
-.drop small { font-size: 12px; color: var(--ink-3); }
-.fine { margin: 0; font-size: 12px; color: var(--ink-3); line-height: 1.4; overflow-wrap: anywhere; }
+.drop b { font-size: 17px; font-weight: 600; color: var(--accent-ink); }
+.drop small { font-size: 15px; color: var(--ink-3); }
+.fine { margin: 0; font-size: 14.5px; color: var(--ink-3); line-height: 1.35; overflow-wrap: anywhere; }
 
 .actions.stack { flex-direction: column; }
 button:disabled,
@@ -550,7 +599,8 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
 /* results */
 .res td.score { color: var(--sev, var(--ink)); font-weight: 600; }
 .res .sev-0 { --sev: var(--sev-0); }
-.res td.flag { color: var(--ink-3); font-size: 12px; }
+.res td.flag { color: var(--ink-3); font-size: 15px; }
+.res td.resc { color: var(--ink-2); font-weight: 400; }
 .res tr.unscored td.flag { color: var(--sev-3); }
 .res tr.unscored td.score { color: var(--ink-3); font-weight: 400; }
 .alert {
@@ -558,7 +608,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
   border: 1px solid var(--sev-3);
   border-radius: var(--r);
   background: var(--surface);
-  font-size: 13px;
+  font-size: 16px;
 }
 .alert p { margin: 0; }
 .alert p + p { margin-top: 4px; color: var(--ink-2); }
@@ -743,9 +793,15 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
   <aside class="readout">
     <section class="total" id="total">
       <span class="eyebrow">Imaging score</span>
-      <div class="figure">
-        <span class="value num" id="score">0</span>
-        <span class="of">/ 100</span>
+      <div class="figures">
+        <div class="figure">
+          <span class="value num" id="score">0</span>
+          <span class="of">raw</span>
+        </div>
+        <div class="figure alt">
+          <span class="value num" id="rescaled">0</span>
+          <span class="of">/ 100 rescaled</span>
+        </div>
       </div>
       <span class="band" id="band">No features present</span>
 
@@ -755,6 +811,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
           <span class="tick" style="left:25%"></span>
           <span class="tick" style="left:31%"></span>
           <span class="tick" style="left:36%"></span>
+          <span class="unreach" id="unreach" title="Not attainable: some features can't be present together"></span>
           <span class="needle" id="needle" style="left:0%"></span>
         </div>
         <div class="scale">
@@ -762,9 +819,15 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
           <span style="left:25%">25</span>
           <span style="left:31%">30</span>
           <span style="left:36%">35</span>
+          <span id="maxLabel" style="left:81%">81</span>
           <span style="left:100%">100</span>
         </div>
       </div>
+
+      <p class="fine">Raw score on the published 0–100 scale. Some features can't be present
+        together, so the highest attainable raw score is <span class="maxraw">81</span>.
+        Rescaled = raw ÷ <span class="maxraw">81</span> × 100. Bands and the cohort
+        thresholds (25, 30, 35) use the raw score.</p>
     </section>
 
     <section class="gcs">
@@ -809,7 +872,9 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
 
       <ul class="rules">
         <li>Column names aren't case-sensitive, and spaces or underscores in them are ignored. Column order doesn't matter.</li>
-        <li>Any other columns (age, GCS, outcome) are kept as they are in the download.</li>
+        <li>The download is your file with four columns added: <code>pbi_score</code> (raw),
+          <code>pbi_score_rescaled</code> (raw ÷ <span class="maxraw">81</span> × 100), <code>pbi_band</code>
+          and <code>pbi_flag</code>. Any other columns (age, GCS, outcome) are kept as they are.</li>
         <li>Every feature cell needs a 1 or 0. A blank cell is not read as 0: the row is flagged and left unscored, so missing data can't lower a score silently.</li>
         <li>Use de-identified IDs only.</li>
       </ul>
@@ -878,7 +943,9 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
       <dt>AUC, GCS 5–9</dt><dd>0.86 (0.65–1.00)</dd>
     </dl>
     <p>Weights are normalized so the full feature set sums to 100. Because trajectory level and
-       ventricular blood extent are each graded as one choice, the highest attainable total is 81.</p>
+       ventricular blood extent are each graded as one choice, the highest attainable total is 81.
+       The rescaled value (raw ÷ 81 × 100) is a readability aid; the weights, bands and
+       thresholds are unchanged and apply to the raw score.</p>
   </div>
 
   <div class="col disclaimer">
@@ -905,6 +972,28 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
   var needle  = document.getElementById("needle");
   var notesEl = document.getElementById("notes");
   var gcsIn   = document.getElementById("gcsInput");
+  var rescEl  = document.getElementById("rescaled");
+
+  // Highest attainable raw score: the top option of each choose-one group plus
+  // every checkbox. Derived from the inputs so it can't drift from the weights.
+  var MAX_RAW = (function () {
+    var top = {}, total = 0;
+    sheet.querySelectorAll("input[data-w]").forEach(function (el) {
+      var w = +el.dataset.w;
+      if (el.type === "radio") top[el.name] = Math.max(top[el.name] || 0, w);
+      else total += w;
+    });
+    Object.keys(top).forEach(function (g) { total += top[g]; });
+    return total;
+  })();
+
+  function rescale(raw) { return Math.round(raw / MAX_RAW * 100); }
+
+  document.querySelectorAll(".maxraw").forEach(function (el) { el.textContent = MAX_RAW; });
+  document.getElementById("unreach").style.left = MAX_RAW + "%";
+  var maxLabel = document.getElementById("maxLabel");
+  maxLabel.style.left = MAX_RAW + "%";
+  maxLabel.textContent = MAX_RAW;
 
   // Bands anchored to the thresholds reported in the paper.
   var BANDS = [
@@ -982,6 +1071,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
     var isZero = score === 0;
 
     scoreEl.textContent = String(score);
+    rescEl.textContent = String(rescale(score));
     bandEl.textContent = isZero ? "No features present" : band.name;
 
     var color = isZero ? "var(--ink-3)" : band.color;
@@ -1008,7 +1098,8 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
     var band = BANDS.find(function (b) { return score <= b.max; });
     var lines = [];
 
-    lines.push("UChicago PBI Imaging Score: " + score + "/100" + (score === 0 ? "" : " (" + band.name + ")"));
+    lines.push("UChicago PBI Imaging Score: " + score + " raw" + (score === 0 ? "" : " (" + band.name + ")"));
+    lines.push("Rescaled: " + rescale(score) + "/100 (raw / " + MAX_RAW + " x 100; " + MAX_RAW + " is the highest attainable raw score)");
     if (gcsIn.value !== "") lines.push("Total GCS at arrival: " + gcsIn.value);
     lines.push("");
 
@@ -1099,7 +1190,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
    */
 
   var ID_COL = "deidID";
-  var OUT_COLS = ["pbi_score", "pbi_band", "pbi_flag"];
+  var OUT_COLS = ["pbi_score", "pbi_score_rescaled", "pbi_band", "pbi_flag"];
 
   function norm(s) {
     return String(s).replace(/^\uFEFF/, "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1271,6 +1362,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
         id: id,
         cells: keep.map(function (i) { return r[i] == null ? "" : r[i]; }),
         score: ok ? score : "",
+        rescaled: ok ? rescale(score) : "",
         band: ok ? bandFor(score).name : "",
         flag: flags.join("; ")
       };
@@ -1287,7 +1379,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
     }
     var lines = [out.header.concat(OUT_COLS).map(cell).join(d)];
     out.results.forEach(function (r) {
-      lines.push(r.cells.concat([r.score, r.band, r.flag]).map(cell).join(d));
+      lines.push(r.cells.concat([r.score, r.rescaled, r.band, r.flag]).map(cell).join(d));
     });
     return lines.join("\n") + "\n";
   }
@@ -1339,7 +1431,8 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
 
   function rowTable(rows, withBand) {
     var h = '<div class="tablebox"><table class="res"><thead><tr>' +
-            '<th scope="col">Row</th><th scope="col">deidID</th><th scope="col" class="score">Score</th>' +
+            '<th scope="col">Row</th><th scope="col"><code>deidID</code></th><th scope="col" class="score">Raw</th>' +
+            (withBand ? '<th scope="col" class="score">Rescaled</th>' : "") +
             (withBand ? '<th scope="col">Band</th>' : '<th scope="col">Issue</th>') +
             "</tr></thead><tbody>";
     rows.forEach(function (r) {
@@ -1347,6 +1440,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
       h += "<tr" + (unscored ? ' class="unscored"' : "") + "><td>" + r.line + "</td><td><code>" +
            esc(r.id || "(blank)") + '</code></td><td class="score ' + (unscored ? "" : sevClass(r.score)) + '">' +
            (unscored ? "–" : r.score) + "</td>" +
+           (withBand ? '<td class="score resc">' + (unscored ? "–" : r.rescaled) + "</td>" : "") +
            (withBand ? "<td>" + esc(r.band || "Not scored") + "</td>" : '<td class="flag">' + esc(r.flag) + "</td>") +
            "</tr>";
     });
@@ -1368,7 +1462,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
       setSummary(String(scored), "of " + all.length + " rows",
                  flagged.length + (flagged.length === 1 ? " row needs" : " rows need") + " attention", "var(--sev-2)");
     } else {
-      setSummary(String(scored), "of " + all.length + " rows", "All rows scored", "var(--accent)");
+      setSummary(String(scored), "of " + all.length + " rows", "All rows scored", "var(--accent-ink)");
     }
     batch.file.hidden = false;
     batch.file.textContent = name;

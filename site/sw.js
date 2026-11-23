@@ -4,17 +4,19 @@
  * hospital Wi-Fi) so corrections to index.html reach users on their next
  * visit. Icons and the manifest are cache-first.
  *
- * Bump CACHE when you change icons or the manifest, or add files to SHELL.
+ * Bump CACHE when you change icons, fonts or the manifest, or add files to SHELL.
  * Edits to index.html alone don't need a bump.
  */
 "use strict";
 
-var CACHE = "pbi-score-v1";
+var CACHE = "pbi-score-v2";
 var NETWORK_TIMEOUT_MS = 3000;
 var SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./fonts/EBGaramond.woff2",
+  "./fonts/EBGaramond-Italic.woff2",
   "./icons/favicon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

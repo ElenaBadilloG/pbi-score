@@ -4,9 +4,15 @@ Bedside calculator for the UChicago PBI Imaging Score (Mansour et al., *J Neurot
 
 It's a static web app: one HTML page with no build step, no backend, and no third-party scripts. It can be installed to a phone's home screen and works offline after the first visit. Nothing entered into the calculator is sent anywhere.
 
+## Raw and rescaled scores
+
+The score is published on a 0–100 scale, but the highest attainable raw score is 81. That's because trajectory level and ventricular blood extent are each a single choice, so their two options can't both count. The app shows the raw score as the main figure, since the bands and the cohort thresholds (25, 30, 35) are defined on it. Alongside it, the app shows a rescaled value, raw ÷ 81 × 100 rounded to a whole number, so that the highest attainable score reads as 100. The rescaled value is for readability only; the weights and score are unchanged. The axis shades 81–100 as not attainable.
+
+The maximum is computed from the inputs (the top option of each choose-one group plus every checkbox), so it stays correct if the weights are ever edited.
+
 ## Scoring a CSV of cases
 
-Switch to **CSV of cases** at the top of the page (or open the app URL with `#batch` at the end). Load a CSV and download the same file with three columns added: `pbi_score`, `pbi_band`, and `pbi_flag`. The file is processed in the browser and never uploaded, and this works offline too.
+Switch to **CSV of cases** at the top of the page (or open the app URL with `#batch` at the end). Load a CSV and download the same file with four columns added: `pbi_score` (raw), `pbi_score_rescaled`, `pbi_band`, and `pbi_flag`. The file is processed in the browser and never uploaded, and this works offline too.
 
 One row per case, with a header row. Coding is 1 = present, 0 = absent:
 
@@ -31,6 +37,12 @@ A row is left unscored, with the reason in `pbi_flag`, when a feature cell is bl
 
 The column names and weights come from the calculator's own inputs in `site/index.html` (`data-col` and `data-w`), so the batch scores always match the single-case calculator. The format table on the page is generated from the same place.
 
+## Design
+
+The colors come from the UChicago palette: Phoenix Maroon (#800000) for the title, buttons, and selection marks, with Light and Dark Greystone and Footer Grey for the neutrals. The severity bands use Dark Greystone, Goldenrod, and Dark Terracotta, then a crimson for "very high", so the top band never reads as the brand maroon. A few shades are deepened beyond the brand values so small text meets WCAG contrast. In dark mode, maroon appears as a muted rose, because #800000 is unreadable on a dark background.
+
+Type is EB Garamond, an open-source Garamond close to the Adobe Garamond Pro in UChicago's identity. It is bundled in `site/fonts/` (subset to Latin and Greek, about 93 KB per style) under the SIL Open Font License (`site/fonts/OFL.txt`). That way the page makes no requests to font services and still works offline. Monospace is kept only for CSV column names.
+
 ## Layout
 
 ```
@@ -39,6 +51,7 @@ site/                  ← everything that gets published
   manifest.webmanifest app name, icons, colors for "Install" / "Add to Home Screen"
   sw.js                service worker for offline use
   icons/               app icons and favicon
+  fonts/               EB Garamond (OFL), self-hosted
 serve.py               local preview server
 build_artifact.py      derives artifact.html (Claude Artifact version) from site/index.html
 tools/make_icons.py    regenerates the icons (only needed if you redesign them)

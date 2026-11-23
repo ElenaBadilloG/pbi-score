@@ -22,6 +22,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ".webmanifest": "application/manifest+json",
         ".js": "text/javascript",
         ".svg": "image/svg+xml",
+        ".woff2": "font/woff2",
     }
 
     def end_headers(self):
