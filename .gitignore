@@ -1,0 +1,8 @@
+# Article PDFs are © Mary Ann Liebert, Inc. Keep them local; the app links to the DOI.
+*.pdf
+
+__pycache__/
+.DS_Store
+
+# Claude Code preview config; holds a machine-specific absolute path.
+.claude/launch.json

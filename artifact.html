@@ -1,0 +1,857 @@
+<title>UChicago PBI Imaging Score — HCT calculator</title>
+<style>
+/* ───────────────────────── tokens ───────────────────────── */
+:root {
+  --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: Charter, "Iowan Old Style", Cambria, Georgia, serif;
+
+  --ground:    #eff1f4;
+  --surface:   #ffffff;
+  --surface-2: #e7eaef;
+  --ink:       #13181f;
+  --ink-2:     #475261;
+  --ink-3:     #78828f;
+  --line:      #d4d9e1;
+  --line-2:    #bcc3ce;
+  --accent:    #0e7c86;
+  --accent-bg: #0e7c8614;
+  --on-accent: #ffffff;
+
+  --sev-0: #64748b;
+  --sev-1: #a9700f;
+  --sev-2: #bc551c;
+  --sev-3: #a42427;
+
+  --shadow: 0 1px 2px #13181f0d, 0 8px 24px -16px #13181f24;
+
+  --r: 3px;
+  --tr: 140ms cubic-bezier(.3,.7,.4,1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:    #0e1116;
+    --surface:   #161b22;
+    --surface-2: #1d232c;
+    --ink:       #e4e8ee;
+    --ink-2:     #a2adbb;
+    --ink-3:     #76818f;
+    --line:      #272e38;
+    --line-2:    #39424e;
+    --accent:    #3fb8c4;
+    --accent-bg: #3fb8c41f;
+    --on-accent: #0e1116;
+
+    --sev-0: #8b97a8;
+    --sev-1: #d9a040;
+    --sev-2: #e07a45;
+    --sev-3: #e2585c;
+
+    --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
+  }
+}
+
+/* viewer toggle must win over the media query, in both directions */
+:root[data-theme="dark"] {
+  --ground:    #0e1116;
+  --surface:   #161b22;
+  --surface-2: #1d232c;
+  --ink:       #e4e8ee;
+  --ink-2:     #a2adbb;
+  --ink-3:     #76818f;
+  --line:      #272e38;
+  --line-2:    #39424e;
+  --accent:    #3fb8c4;
+  --accent-bg: #3fb8c41f;
+  --on-accent: #0e1116;
+  --sev-0: #8b97a8;
+  --sev-1: #d9a040;
+  --sev-2: #e07a45;
+  --sev-3: #e2585c;
+  --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
+}
+:root[data-theme="light"] {
+  --ground:    #eff1f4;
+  --surface:   #ffffff;
+  --surface-2: #e7eaef;
+  --ink:       #13181f;
+  --ink-2:     #475261;
+  --ink-3:     #78828f;
+  --line:      #d4d9e1;
+  --line-2:    #bcc3ce;
+  --accent:    #0e7c86;
+  --accent-bg: #0e7c8614;
+  --on-accent: #ffffff;
+  --sev-0: #64748b;
+  --sev-1: #a9700f;
+  --sev-2: #bc551c;
+  --sev-3: #a42427;
+  --shadow: 0 1px 2px #13181f0d, 0 8px 24px -16px #13181f24;
+}
+
+/* ───────────────────────── base ───────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+:where(a):focus-visible,
+:where(button):focus-visible,
+:where(input):focus-visible,
+.opt:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ───────────────────────── shell ───────────────────────── */
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px 72px; }
+
+header.top {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  padding: 26px 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+}
+header.top .titles { flex: 1 1 320px; display: flex; flex-direction: column; gap: 5px; }
+header.top h1 { font-size: 23px; letter-spacing: -.012em; }
+header.top p { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 62ch; }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 332px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ───────────────────────── worksheet ───────────────────────── */
+.sheet { display: flex; flex-direction: column; gap: 26px; }
+
+.block { display: flex; flex-direction: column; gap: 9px; }
+.block > .block-head { display: flex; flex-direction: column; gap: 2px; }
+.block-head h2 { font-size: 13px; letter-spacing: .01em; }
+.block-head .hint { color: var(--ink-3); font-size: 12.5px; }
+
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { padding: 0; }
+
+/* option row — shared by radios and checkboxes */
+.opt {
+  --sev: var(--sev-0);
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background var(--tr), border-color var(--tr);
+}
+.opt + .opt { margin-top: -1px; }
+.opt:hover { border-color: var(--line-2); z-index: 1; }
+.opt:has(:checked) {
+  background: var(--surface-2);
+  border-color: var(--line-2);
+  z-index: 2;
+}
+.opt input { margin: 0; width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+.opt .label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.opt .label b { font-weight: 500; font-size: 14px; letter-spacing: -.003em; }
+.opt:has(:checked) .label b { font-weight: 600; }
+.opt .label small { color: var(--ink-3); font-size: 12px; line-height: 1.35; }
+
+/* weight readout + proportional bar: the row's own data-ink */
+.weight { display: flex; align-items: center; gap: 9px; }
+.weight .w {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ink-3);
+  min-width: 2ch;
+  text-align: right;
+  transition: color var(--tr);
+}
+.opt:has(:checked) .weight .w { color: var(--sev); font-weight: 600; }
+.wbar {
+  width: 40px;
+  height: 3px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: background var(--tr);
+}
+.wbar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: calc(var(--w) / 18 * 100%);
+  background: var(--line-2);
+  transition: background var(--tr);
+}
+.opt:has(:checked) .wbar::after { background: var(--sev); }
+
+/* severity assignment by magnitude */
+.sev-1 { --sev: var(--sev-1); }
+.sev-2 { --sev: var(--sev-2); }
+.sev-3 { --sev: var(--sev-3); }
+
+/* ── the third-ventricle datum control ── */
+.datum-stack {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  margin-top: -1px;
+}
+.datum-stack .opt {
+  border: 0;
+  background: transparent;
+  margin: 0;
+  border-radius: 0;
+}
+.datum-stack .opt:has(:checked) { background: var(--surface-2); }
+.datum-stack .opt:first-child { border-radius: var(--r) var(--r) 0 0; }
+.datum-stack .opt:last-child { border-radius: 0 0 var(--r) var(--r); }
+
+.datum {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.datum::before, .datum::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+}
+
+/* ───────────────────────── readout ───────────────────────── */
+.readout {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.readout > section { padding: 16px 18px; border-top: 1px solid var(--line); }
+.readout > section:first-child { border-top: 0; }
+
+/* total */
+.total { display: flex; flex-direction: column; gap: 10px; }
+.total .figure { display: flex; align-items: baseline; gap: 7px; }
+.total .figure .value {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 54px;
+  line-height: .92;
+  font-weight: 600;
+  letter-spacing: -.035em;
+  color: var(--band, var(--ink));
+  transition: color var(--tr);
+}
+.total .figure .of { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+
+.band {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3.5px 9px 3.5px 7px;
+  border: 1px solid var(--band);
+  border-radius: 100px;
+  color: var(--band);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  transition: color var(--tr), border-color var(--tr);
+}
+.band::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--band);
+  transition: background var(--tr);
+}
+
+/* 0–100 axis with the paper's threshold anchors */
+.axis { display: flex; flex-direction: column; gap: 5px; }
+.axis .track {
+  position: relative;
+  height: 7px;
+  border-radius: 2px;
+  background: linear-gradient(to right,
+    var(--sev-0) 0 25%,
+    var(--sev-1) 25% 31%,
+    var(--sev-2) 31% 36%,
+    var(--sev-3) 36% 100%);
+  opacity: .26;
+}
+.axis .marks { position: relative; height: 7px; margin-top: -7px; }
+.axis .tick {
+  position: absolute;
+  top: -2px;
+  width: 1px;
+  height: 11px;
+  background: var(--ink-3);
+  opacity: .5;
+}
+.axis .needle {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--band, var(--ink));
+  box-shadow: 0 0 0 2px var(--surface);
+  transform: translateX(-1px);
+  transition: left var(--tr), background var(--tr);
+}
+.axis .scale {
+  position: relative;
+  height: 13px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--ink-3);
+}
+.axis .scale span { position: absolute; transform: translateX(-50%); }
+.axis .scale span:first-child { transform: none; }
+.axis .scale span:last-child { transform: translateX(-100%); }
+
+/* GCS */
+.gcs { display: flex; flex-direction: column; gap: 9px; }
+.gcs .field { display: flex; align-items: center; gap: 10px; }
+.gcs label { font-size: 13px; color: var(--ink-2); }
+.gcs input {
+  width: 68px;
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+}
+
+/* interpretation */
+.notes { display: flex; flex-direction: column; gap: 10px; }
+.note { display: flex; flex-direction: column; gap: 3px; }
+.note p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.note p strong { font-weight: 600; }
+.note .src { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.note.empty p { color: var(--ink-3); }
+
+/* actions */
+.actions { display: flex; gap: 8px; }
+button {
+  flex: 1;
+  padding: 8px 10px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background var(--tr), border-color var(--tr);
+}
+button:hover { background: var(--surface-2); border-color: var(--ink-3); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+button.primary:hover { filter: brightness(1.08); }
+
+/* ───────────────────────── provenance ───────────────────────── */
+.provenance {
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  gap: 24px 32px;
+}
+.provenance .col { display: flex; flex-direction: column; gap: 7px; }
+.provenance p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.provenance .cite {
+  font-family: var(--serif);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.provenance .cite em { font-style: italic; }
+.provenance a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.provenance dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12.5px; }
+.provenance dt { color: var(--ink-3); }
+.provenance dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.disclaimer p { color: var(--ink-2); }
+.disclaimer strong { color: var(--ink); font-weight: 600; }
+
+/* ───────────────────────── responsive ───────────────────────── */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .readout { position: static; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media print {
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .actions, .theme-toggle { display: none; }
+  .layout { grid-template-columns: 1fr; gap: 18px; }
+  .readout { position: static; box-shadow: none; }
+  .opt:not(:has(:checked)) { display: none; }
+}
+</style>
+<div class="wrap">
+
+<header class="top">
+  <div class="titles">
+    <span class="eyebrow">Penetrating brain injury · head CT on arrival</span>
+    <h1>UChicago PBI Imaging Score</h1>
+    <p>Additive 0–100 score of head-CT features associated with in-hospital mortality after
+       gunshot wound to the head. Weights are Shapley-derived; features are ordered by importance.</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ════════════ worksheet ════════════ -->
+  <form class="sheet" id="sheet">
+
+    <!-- Projectile trajectory: the third-ventricle datum -->
+    <div class="block">
+      <fieldset>
+        <legend class="block-head">
+          <h2>Projectile trajectory</h2>
+          <span class="hint">Does the tract cross hemispheres, and at what level? Choose one.</span>
+        </legend>
+
+        <label class="opt" style="margin-top:9px">
+          <input type="radio" name="traj" value="0" data-w="0" checked />
+          <span class="label"><b>Not transhemispheric</b></span>
+          <span class="weight"><span class="w">0</span><span class="wbar" style="--w:0"></span></span>
+        </label>
+
+        <div class="datum-stack">
+          <label class="opt sev-2">
+            <input type="radio" name="traj" value="11" data-w="11" data-ci="9.7–11.6" data-label="Transhemispheric projectile above the level of the third ventricle" />
+            <span class="label">
+              <b>Transhemispheric — above</b>
+              <small>Tract crosses the midline above the third ventricle</small>
+            </span>
+            <span class="weight"><span class="w">11</span><span class="wbar" style="--w:11"></span></span>
+          </label>
+
+          <div class="datum">level of the third ventricle</div>
+
+          <label class="opt sev-3">
+            <input type="radio" name="traj" value="18" data-w="18" data-ci="16.8–19.9" data-label="Transhemispheric projectile below the level of the third ventricle" />
+            <span class="label">
+              <b>Transhemispheric — below</b>
+              <small>Highest-weighted feature in the model</small>
+            </span>
+            <span class="weight"><span class="w">18</span><span class="wbar" style="--w:18"></span></span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- Lateral ventricular blood: graded -->
+    <div class="block">
+      <fieldset>
+        <legend class="block-head">
+          <h2>Blood in the lateral ventricles</h2>
+          <span class="hint">Graded by extent. Choose one.</span>
+        </legend>
+
+        <label class="opt" style="margin-top:9px">
+          <input type="radio" name="ivh" value="0" data-w="0" checked />
+          <span class="label"><b>None</b></span>
+          <span class="weight"><span class="w">0</span><span class="wbar" style="--w:0"></span></span>
+        </label>
+        <label class="opt sev-1">
+          <input type="radio" name="ivh" value="9" data-w="9" data-ci="7.9–9.8" data-label="Partial presence of blood in the lateral ventricles" />
+          <span class="label">
+            <b>Partial</b>
+            <small>Any amount of blood, ventricles not casted</small>
+          </span>
+          <span class="weight"><span class="w">9</span><span class="wbar" style="--w:9"></span></span>
+        </label>
+        <label class="opt sev-3">
+          <input type="radio" name="ivh" value="18" data-w="18" data-ci="16.8–19.6" data-label="Bilateral casted lateral ventricles" />
+          <span class="label">
+            <b>Bilateral casted ventricles</b>
+            <small>Both lateral ventricles fully cast with blood</small>
+          </span>
+          <span class="weight"><span class="w">18</span><span class="wbar" style="--w:18"></span></span>
+        </label>
+      </fieldset>
+    </div>
+
+    <!-- Binary features, ordered by weight -->
+    <div class="block">
+      <fieldset>
+        <legend class="block-head">
+          <h2>Additional features</h2>
+          <span class="hint">Select all present. Absent features contribute zero.</span>
+        </legend>
+
+        <div style="margin-top:9px">
+          <label class="opt sev-3">
+            <input type="checkbox" data-w="14" data-ci="12.7–15.1" data-label="Brainstem involvement" />
+            <span class="label"><b>Brainstem involvement</b></span>
+            <span class="weight"><span class="w">14</span><span class="wbar" style="--w:14"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="9" data-ci="8.2–10.0" data-label="Blood in the ambient cistern" />
+            <span class="label">
+              <b>Blood in the ambient cistern</b>
+              <small>Any amount</small>
+            </span>
+            <span class="weight"><span class="w">9</span><span class="wbar" style="--w:9"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="9" data-ci="7.9–9.5" data-label="Cerebellar involvement" />
+            <span class="label"><b>Cerebellar involvement</b></span>
+            <span class="weight"><span class="w">9</span><span class="wbar" style="--w:9"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="4" data-ci="3.4–4.6" data-label="Ventricular effacement" />
+            <span class="label">
+              <b>Ventricular effacement</b>
+              <small>Any degree</small>
+            </span>
+            <span class="weight"><span class="w">4</span><span class="wbar" style="--w:4"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="4" data-ci="3.4–4.4" data-label="Midline shift > 0 mm" />
+            <span class="label">
+              <b>Midline shift &gt; 0 mm</b>
+              <small>Any measurable shift</small>
+            </span>
+            <span class="weight"><span class="w">4</span><span class="wbar" style="--w:4"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="3" data-ci="2.4–3.2" data-label="Perforating injury" />
+            <span class="label">
+              <b>Perforating injury</b>
+              <small>Through-and-through tract</small>
+            </span>
+            <span class="weight"><span class="w">3</span><span class="wbar" style="--w:3"></span></span>
+          </label>
+          <label class="opt sev-1">
+            <input type="checkbox" data-w="2" data-ci="1.4–1.9" data-label="Intracerebral hematoma > 20 mm" />
+            <span class="label">
+              <b>Intracerebral hematoma &gt; 20 mm</b>
+              <small>Largest diameter</small>
+            </span>
+            <span class="weight"><span class="w">2</span><span class="wbar" style="--w:2"></span></span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+  </form>
+
+  <!-- ════════════ readout ════════════ -->
+  <aside class="readout">
+    <section class="total" id="total">
+      <span class="eyebrow">Imaging score</span>
+      <div class="figure">
+        <span class="value num" id="score">0</span>
+        <span class="of">/ 100</span>
+      </div>
+      <span class="band" id="band">No features present</span>
+
+      <div class="axis">
+        <div class="track"></div>
+        <div class="marks">
+          <span class="tick" style="left:25%"></span>
+          <span class="tick" style="left:31%"></span>
+          <span class="tick" style="left:36%"></span>
+          <span class="needle" id="needle" style="left:0%"></span>
+        </div>
+        <div class="scale">
+          <span style="left:0">0</span>
+          <span style="left:25%">25</span>
+          <span style="left:31%">30</span>
+          <span style="left:36%">35</span>
+          <span style="left:100%">100</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="gcs">
+      <span class="eyebrow">Joint interpretation</span>
+      <div class="field">
+        <label for="gcsInput">Total GCS at arrival</label>
+        <input type="number" id="gcsInput" min="3" max="15" step="1" placeholder="—" inputmode="numeric" />
+      </div>
+    </section>
+
+    <section class="notes" id="notes"></section>
+
+    <section class="actions">
+      <button type="button" class="primary" id="copyBtn">Copy findings</button>
+      <button type="button" id="resetBtn">Reset</button>
+    </section>
+  </aside>
+</div>
+
+<!-- ════════════ provenance ════════════ -->
+<div class="provenance">
+  <div class="col">
+    <span class="eyebrow">Source</span>
+    <p class="cite">
+      Mansour A, Badillo-Goicoechea E, Alvarado-Dyer R, et al.
+      Brain imaging features in patients with gunshot wounds to the head.
+      <em>J Neurotrauma</em>. 2025;42(7–8):689–699.
+      <a href="https://doi.org/10.1089/neu.2024.0464" target="_blank" rel="noopener noreferrer">doi:10.1089/neu.2024.0464</a>
+    </p>
+    <p>Full radiological feature definitions are given in the article's Supplementary Table S1.
+       Inter-reader agreement across features averaged κ = 0.712.</p>
+  </div>
+
+  <div class="col">
+    <span class="eyebrow">Derivation</span>
+    <dl>
+      <dt>Cohort</dt><dd>230 patients</dd>
+      <dt>Train / test</dt><dd>174 / 56</dd>
+      <dt>Model</dt><dd>SuperLearner</dd>
+      <dt>Weights</dt><dd>Shapley values</dd>
+      <dt>AUC, mortality</dt><dd>0.86 (0.77–0.96)</dd>
+      <dt>AUC, GCS 5–9</dt><dd>0.86 (0.65–1.00)</dd>
+    </dl>
+    <p>Weights are normalized so the full feature set sums to 100. Because trajectory level and
+       ventricular blood extent are each graded as one choice, the highest attainable total is 81.</p>
+  </div>
+
+  <div class="col disclaimer">
+    <span class="eyebrow">Intended use</span>
+    <p><strong>Research and educational tool. Not a substitute for clinical judgment.</strong>
+       The score was derived retrospectively at a single Level 1 trauma center and has not been
+       externally validated. It is specific to penetrating injury and does not apply to blunt TBI.</p>
+    <p>Mortality figures reported below are observed frequencies in the published cohort, not
+       individual predicted probabilities. Outcomes in that cohort were influenced by withdrawal
+       of life-sustaining therapy. No patient data entered here leaves this page.</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var sheet   = document.getElementById("sheet");
+  var totalEl = document.getElementById("total");
+  var scoreEl = document.getElementById("score");
+  var bandEl  = document.getElementById("band");
+  var needle  = document.getElementById("needle");
+  var notesEl = document.getElementById("notes");
+  var gcsIn   = document.getElementById("gcsInput");
+
+  // Bands anchored to the thresholds reported in the paper.
+  var BANDS = [
+    { max: 24,       name: "Low imaging burden",  color: "var(--sev-0)" },
+    { max: 30,       name: "Intermediate",        color: "var(--sev-1)" },
+    { max: 35,       name: "High",                color: "var(--sev-2)" },
+    { max: Infinity, name: "Very high",           color: "var(--sev-3)" }
+  ];
+
+  function selected() {
+    var out = [];
+    sheet.querySelectorAll("input[type=checkbox]").forEach(function (el) {
+      if (el.checked) out.push({ w: +el.dataset.w, ci: el.dataset.ci, label: el.dataset.label });
+    });
+    sheet.querySelectorAll("input[type=radio]:checked").forEach(function (el) {
+      if (+el.dataset.w > 0) out.push({ w: +el.dataset.w, ci: el.dataset.ci, label: el.dataset.label });
+    });
+    return out.sort(function (a, b) { return b.w - a.w; });
+  }
+
+  function interpret(score, gcs) {
+    var notes = [];
+
+    if (score > 35) {
+      notes.push({
+        src: "Cohort observation",
+        html: "A score <strong>above 35</strong> was associated with mortality in <strong>every patient</strong> in the published cohort, regardless of total GCS."
+      });
+    }
+
+    if (gcs !== null) {
+      if (gcs <= 4) {
+        if (score > 30) {
+          notes.push({
+            src: "GCS 3–4",
+            html: "With GCS 3–4 and a score <strong>above 30</strong>, mortality was <strong>100%</strong> in the cohort."
+          });
+        } else if (score < 25) {
+          notes.push({
+            src: "GCS 3–4",
+            html: "About <strong>30%</strong> of patients with GCS 3–4 and a score <strong>below 25</strong> survived — a group that may benefit from continued aggressive management despite a traditionally dismal GCS."
+          });
+        } else {
+          notes.push({
+            src: "GCS 3–4",
+            html: "This score falls between the cohort's 25 and 30 anchors for GCS 3–4. Survival was observed below 25; mortality was universal above 30."
+          });
+        }
+      } else if (gcs <= 9) {
+        notes.push({
+          src: "GCS 5–9",
+          html: "The score is <strong>optimized for this range</strong>, where prognostic uncertainty is greatest (AUC 0.86, vs 0.61 Rotterdam and 0.52 Marshall). Mortality rose with higher-risk CT features."
+        });
+      } else {
+        notes.push({
+          src: "GCS 10–15",
+          html: "Prognostic uncertainty is lower at this GCS, where the score adds least. Imaging burden still warrants review on its own terms."
+        });
+      }
+    } else {
+      notes.push({
+        src: "Joint interpretation",
+        html: "Enter total GCS at arrival to see how this score read out against outcomes in the published cohort."
+      });
+    }
+
+    return notes;
+  }
+
+  function render() {
+    var items = selected();
+    var score = items.reduce(function (s, i) { return s + i.w; }, 0);
+
+    var band = BANDS.find(function (b) { return score <= b.max; });
+    var isZero = score === 0;
+
+    scoreEl.textContent = String(score);
+    bandEl.textContent = isZero ? "No features present" : band.name;
+
+    var color = isZero ? "var(--ink-3)" : band.color;
+    totalEl.style.setProperty("--band", color);
+    bandEl.style.setProperty("--band", color);
+    needle.style.setProperty("--band", color);
+    needle.style.left = score + "%";
+
+    var gcs = gcsIn.value === "" ? null : Math.min(15, Math.max(3, parseInt(gcsIn.value, 10)));
+    if (gcsIn.value !== "" && isNaN(gcs)) gcs = null;
+
+    notesEl.innerHTML = "";
+    interpret(score, gcs).forEach(function (n) {
+      var d = document.createElement("div");
+      d.className = "note" + (items.length === 0 ? " empty" : "");
+      d.innerHTML = '<span class="src">' + n.src + "</span><p>" + n.html + "</p>";
+      notesEl.appendChild(d);
+    });
+  }
+
+  function findingsText() {
+    var items = selected();
+    var score = items.reduce(function (s, i) { return s + i.w; }, 0);
+    var band = BANDS.find(function (b) { return score <= b.max; });
+    var lines = [];
+
+    lines.push("UChicago PBI Imaging Score: " + score + "/100" + (score === 0 ? "" : " (" + band.name + ")"));
+    if (gcsIn.value !== "") lines.push("Total GCS at arrival: " + gcsIn.value);
+    lines.push("");
+
+    if (!items.length) {
+      lines.push("No modeled head-CT features identified.");
+    } else {
+      lines.push("Features present (score contribution, 95% CI):");
+      items.forEach(function (i) {
+        lines.push("  • " + i.label + " — " + i.w + " [" + i.ci + "]");
+      });
+    }
+
+    lines.push("");
+    lines.push("Mansour A, et al. J Neurotrauma. 2025;42:689-699. doi:10.1089/neu.2024.0464");
+    lines.push("Research tool; not a substitute for clinical judgment.");
+    return lines.join("\n");
+  }
+
+  // navigator.clipboard is unavailable on file:// in several browsers, and this
+  // page is meant to be usable as a local file, so fall back to a hidden textarea.
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  document.getElementById("copyBtn").addEventListener("click", function (e) {
+    var btn = e.currentTarget;
+    var text = findingsText();
+    var settle = function (ok) {
+      btn.textContent = ok ? "Copied" : "Copy failed — select manually";
+      setTimeout(function () { btn.textContent = "Copy findings"; }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { settle(true); },
+        function () { settle(legacyCopy(text)); }
+      );
+    } else {
+      settle(legacyCopy(text));
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    sheet.querySelectorAll("input[type=checkbox]").forEach(function (el) { el.checked = false; });
+    sheet.querySelectorAll('input[type=radio][data-w="0"]').forEach(function (el) { el.checked = true; });
+    gcsIn.value = "";
+    render();
+  });
+
+  sheet.addEventListener("change", render);
+  gcsIn.addEventListener("input", render);
+  render();
+})();
+</script>
