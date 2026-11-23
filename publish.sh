@@ -128,7 +128,15 @@ fi
 # The run started by the push may have begun before Pages was on, so start a
 # fresh one (the workflow's concurrency setting cancels the older run).
 say "Deploying (about a minute)"
-gh workflow run pages.yml --repo "$OWNER/$REPO" --ref main
+# GitHub needs a few seconds to register a just-pushed workflow file, and
+# answers "workflow not found" until then, so retry for up to ~30 seconds.
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  if gh workflow run pages.yml --repo "$OWNER/$REPO" --ref main 2>/dev/null; then
+    break
+  fi
+  [ "$attempt" = 10 ] && die "GitHub didn't accept the deploy request. Check the Actions tab: https://github.com/$OWNER/$REPO/actions"
+  sleep 3
+done
 RUN_ID=""
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   sleep 3

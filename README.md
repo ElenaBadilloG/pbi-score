@@ -4,6 +4,33 @@ Bedside calculator for the UChicago PBI Imaging Score (Mansour et al., *J Neurot
 
 It's a static web app: one HTML page with no build step, no backend, and no third-party scripts. It can be installed to a phone's home screen and works offline after the first visit. Nothing entered into the calculator is sent anywhere.
 
+## Scoring a CSV of cases
+
+Switch to **CSV of cases** at the top of the page (or open the app URL with `#batch` at the end). Load a CSV and download the same file with three columns added: `pbi_score`, `pbi_band`, and `pbi_flag`. The file is processed in the browser and never uploaded, and this works offline too.
+
+One row per case, with a header row. Coding is 1 = present, 0 = absent:
+
+| Column | Feature | Points |
+| --- | --- | ---: |
+| `deidID` | De-identified case ID | |
+| `traj_above_3v` | Transhemispheric projectile above the level of the third ventricle | 11 |
+| `traj_below_3v` | Transhemispheric projectile below the level of the third ventricle | 18 |
+| `ivh_partial` | Partial presence of blood in the lateral ventricles | 9 |
+| `ivh_casted` | Bilateral casted lateral ventricles | 18 |
+| `brainstem` | Brainstem involvement | 14 |
+| `ambient_cistern_blood` | Blood in the ambient cistern | 9 |
+| `cerebellar` | Cerebellar involvement | 9 |
+| `ventricular_effacement` | Ventricular effacement | 4 |
+| `midline_shift` | Midline shift > 0 mm | 4 |
+| `perforating` | Perforating injury | 3 |
+| `ich_gt_20mm` | Intracerebral hematoma > 20 mm | 2 |
+
+As in the single-case calculator, at most one of the two `traj_` columns and at most one of the two `ivh_` columns can be 1. Column names ignore case, spaces, and underscores, and column order doesn't matter. Other columns pass through unchanged. Comma, semicolon, and tab delimiters are all detected, and the output uses the same one.
+
+A row is left unscored, with the reason in `pbi_flag`, when a feature cell is blank, isn't 1 or 0, or breaks a choose-one rule. Blanks are never treated as 0. Rows with a blank or repeated `deidID` are still scored but flagged.
+
+The column names and weights come from the calculator's own inputs in `site/index.html` (`data-col` and `data-w`), so the batch scores always match the single-case calculator. The format table on the page is generated from the same place.
+
 ## Layout
 
 ```
