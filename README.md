@@ -6,9 +6,9 @@ It's a static web app: one HTML page with no build step, no backend, and no thir
 
 ## Raw and rescaled scores
 
-The score is published on a 0–100 scale, but the highest attainable raw score is 81. That's because trajectory level and ventricular blood extent are each a single choice, so their two options can't both count. The app shows the raw score as the main figure, since the bands and the cohort thresholds (25, 30, 35) are defined on it. Alongside it, the app shows a rescaled value, raw ÷ 81 × 100 rounded to a whole number, so that the highest attainable score reads as 100. The rescaled value is for readability only; the weights and score are unchanged. The axis shades 81–100 as not attainable.
+The score is published on a 0–100 scale, but the highest attainable raw score is 81. That's because trajectory level and ventricular blood extent are each a single choice, so their two options can't both count. The app shows the raw score as the main figure, since the bands and the cohort thresholds (25, 30, 35) are defined on it. Alongside it, the app shows a rescaled value, raw ÷ 81 × 100 rounded to a whole number, so that the highest attainable score reads as 100. The rescaled value is for readability only; the weights and score are unchanged. The axis runs from 0 to 81, so a full bar means the highest attainable score.
 
-The maximum is computed from the inputs (the top option of each choose-one group plus every checkbox), so it stays correct if the weights are ever edited.
+The maximum is computed from the inputs (the top option of each choose-one group plus every checkbox), so it stays correct if the weights are ever edited. The axis ticks and band colors are placed from it too.
 
 ## Scoring a CSV of cases
 

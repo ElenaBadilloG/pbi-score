@@ -385,10 +385,10 @@ legend { padding: 0; }
   height: 7px;
   border-radius: 2px;
   background: linear-gradient(to right,
-    var(--sev-0) 0 25%,
-    var(--sev-1) 25% 31%,
-    var(--sev-2) 31% 36%,
-    var(--sev-3) 36% 100%);
+    var(--sev-0) 0 var(--b1, 30.86%),
+    var(--sev-1) var(--b1, 30.86%) var(--b2, 38.27%),
+    var(--sev-2) var(--b2, 38.27%) var(--b3, 44.44%),
+    var(--sev-3) var(--b3, 44.44%) 100%);
   opacity: .26;
 }
 .axis .marks { position: relative; height: 7px; margin-top: -7px; }
@@ -399,14 +399,6 @@ legend { padding: 0; }
   height: 11px;
   background: var(--ink-3);
   opacity: .5;
-}
-.axis .unreach {
-  position: absolute;
-  top: -5px; /* .marks sits 5px below the track (axis gap minus its -7px pull-up) */
-  right: 0;
-  height: 7px;
-  border-radius: 0 2px 2px 0;
-  background: var(--surface) repeating-linear-gradient(135deg, var(--line-2) 0 1px, transparent 1px 4px);
 }
 .axis .needle {
   position: absolute;
@@ -426,9 +418,10 @@ legend { padding: 0; }
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink-3);
 }
-.axis .scale span { position: absolute; transform: translateX(-50%); }
-.axis .scale span:first-child { transform: none; }
-.axis .scale span:last-child { transform: translateX(-100%); }
+.axis .scale > span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.axis .scale > span:first-child { transform: none; }
+.axis .scale > span:last-child { transform: translateX(-100%); }
+.axis .scale .pct { font-style: italic; }   /* rescaled equivalent, styled like "/ 100 rescaled" */
 
 /* GCS */
 .gcs { display: flex; flex-direction: column; gap: 9px; }
@@ -806,24 +799,22 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
       <div class="axis">
         <div class="track"></div>
         <div class="marks">
-          <span class="tick" style="left:25%"></span>
-          <span class="tick" style="left:31%"></span>
-          <span class="tick" style="left:36%"></span>
-          <span class="unreach" id="unreach" title="Not attainable: some features can't be present together"></span>
+          <span class="tick" data-at="25"></span>
+          <span class="tick" data-at="31"></span>
+          <span class="tick" data-at="36"></span>
           <span class="needle" id="needle" style="left:0%"></span>
         </div>
         <div class="scale">
-          <span style="left:0">0</span>
-          <span style="left:25%">25</span>
-          <span style="left:31%">30</span>
-          <span style="left:36%">35</span>
-          <span id="maxLabel" style="left:81%">81</span>
-          <span style="left:100%">100</span>
+          <span style="left:0"><span class="pct">(0%)</span> 0</span>
+          <span data-at="25">25</span>
+          <span data-at="31">30</span>
+          <span data-at="36">35</span>
+          <span style="left:100%"><span class="pct">(100%)</span> <span id="maxLabel">81</span></span>
         </div>
       </div>
 
       <p class="fine">Raw score on the published 0–100 scale. Some features can't be present
-        together, so the highest attainable raw score is <span class="maxraw">81</span>.
+        together, so the highest attainable raw score is <span class="maxraw">81</span>, where the axis ends.
         Rescaled = raw ÷ <span class="maxraw">81</span> × 100. Bands and the cohort
         thresholds (25, 30, 35) use the raw score.</p>
     </section>
@@ -978,10 +969,17 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
   function rescale(raw) { return Math.round(raw / MAX_RAW * 100); }
 
   document.querySelectorAll(".maxraw").forEach(function (el) { el.textContent = MAX_RAW; });
-  document.getElementById("unreach").style.left = MAX_RAW + "%";
-  var maxLabel = document.getElementById("maxLabel");
-  maxLabel.style.left = MAX_RAW + "%";
-  maxLabel.textContent = MAX_RAW;
+  // The axis runs 0 to MAX_RAW. Ticks, labels and band colors are placed in
+  // raw-score units (data-at = first score of each band).
+  function axisPos(raw) { return (raw / MAX_RAW * 100).toFixed(2) + "%"; }
+  var axisEl = document.querySelector(".axis");
+  document.querySelectorAll(".axis [data-at]").forEach(function (el) {
+    el.style.left = axisPos(+el.dataset.at);
+  });
+  axisEl.querySelectorAll(".tick").forEach(function (t, i) {
+    axisEl.style.setProperty("--b" + (i + 1), axisPos(+t.dataset.at));   // band color stops
+  });
+  document.getElementById("maxLabel").textContent = MAX_RAW;
 
   // Bands anchored to the thresholds reported in the paper.
   var BANDS = [
@@ -1066,7 +1064,7 @@ button:disabled:hover { opacity: .45; cursor: not-allowed; filter: none; }
     totalEl.style.setProperty("--band", color);
     bandEl.style.setProperty("--band", color);
     needle.style.setProperty("--band", color);
-    needle.style.left = score + "%";
+    needle.style.left = "min(" + axisPos(score) + ", calc(100% - 2px))"; // keep the needle inside the track at the max
 
     var gcs = gcsIn.value === "" ? null : Math.min(15, Math.max(3, parseInt(gcsIn.value, 10)));
     if (gcsIn.value !== "" && isNaN(gcs)) gcs = null;
