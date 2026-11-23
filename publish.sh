@@ -125,32 +125,65 @@ else
 fi
 
 # ── 5. Deploy and wait ──
-# The run started by the push may have begun before Pages was on, so start a
-# fresh one (the workflow's concurrency setting cancels the older run).
+# Pushing to main starts a deploy by itself, so wait for that one instead of
+# starting a second (two at once cancel each other). Start a fresh run only if
+# there's no run for this commit or it didn't succeed: that covers the very
+# first publish (the push run starts before Pages is on), re-running after a
+# failure, and GitHub hiccups. Up to 3 tries.
 say "Deploying (about a minute)"
-# GitHub needs a few seconds to register a just-pushed workflow file, and
-# answers "workflow not found" until then, so retry for up to ~30 seconds.
-for attempt in 1 2 3 4 5 6 7 8 9 10; do
-  if gh workflow run pages.yml --repo "$OWNER/$REPO" --ref main 2>/dev/null; then
+SHA="$(git rev-parse HEAD)"
+
+# Newest deploy run for this commit, optionally limited to one trigger.
+find_run() {
+  local filter=".headSha == \"$SHA\""
+  [ -n "${1:-}" ] && filter="$filter and .event == \"$1\""
+  gh run list --repo "$OWNER/$REPO" --workflow pages.yml --limit 30 \
+    --json databaseId,headSha,event --jq "[.[] | select($filter)][0].databaseId // empty" 2>/dev/null || true
+}
+
+# Start a new run and print its id once it appears.
+start_run() {
+  local before after attempt
+  before="$(find_run workflow_dispatch)"
+  # A just-pushed workflow file takes a few seconds to register ("not found" until then).
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    gh workflow run pages.yml --repo "$OWNER/$REPO" --ref main >/dev/null 2>&1 && break
+    [ "$attempt" = 10 ] && return 1
+    sleep 3
+  done
+  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    sleep 3
+    after="$(find_run workflow_dispatch)"
+    if [ -n "$after" ] && [ "$after" != "$before" ]; then echo "$after"; return 0; fi
+  done
+  return 1
+}
+
+RUN_ID=""
+for _ in 1 2 3 4 5 6; do            # give the push-triggered run a moment to appear
+  RUN_ID="$(find_run push)"
+  [ -n "$RUN_ID" ] && break
+  sleep 3
+done
+
+TRY=1
+while :; do
+  if [ -z "$RUN_ID" ]; then
+    RUN_ID="$(start_run)" || die "GitHub didn't start a deploy. Check the Actions tab: https://github.com/$OWNER/$REPO/actions"
+  fi
+  echo "  Watching https://github.com/$OWNER/$REPO/actions/runs/$RUN_ID"
+  if gh run watch "$RUN_ID" --repo "$OWNER/$REPO" --exit-status >/dev/null 2>&1; then
     break
   fi
-  [ "$attempt" = 10 ] && die "GitHub didn't accept the deploy request. Check the Actions tab: https://github.com/$OWNER/$REPO/actions"
-  sleep 3
+  if [ "$TRY" -ge 3 ]; then
+    die "Deploy failed 3 times. Details: https://github.com/$OWNER/$REPO/actions/runs/$RUN_ID
+Running this script again later is safe; it will retry the deploy."
+  fi
+  echo "  That run didn't succeed (normal on a first publish; otherwise usually a GitHub hiccup). Trying again."
+  TRY=$((TRY + 1))
+  RUN_ID=""
 done
-RUN_ID=""
-for _ in 1 2 3 4 5 6 7 8 9 10; do
-  sleep 3
-  RUN_ID="$(gh run list --repo "$OWNER/$REPO" --workflow pages.yml --event workflow_dispatch \
-            --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
-  [ -n "$RUN_ID" ] && break
-done
-[ -n "$RUN_ID" ] || die "Couldn't find the deploy run. Check the Actions tab: https://github.com/$OWNER/$REPO/actions"
-
-if ! gh run watch "$RUN_ID" --repo "$OWNER/$REPO" --exit-status; then
-  die "Deploy failed. Details: https://github.com/$OWNER/$REPO/actions/runs/$RUN_ID"
-fi
 
 URL="$(gh api "repos/$OWNER/$REPO/pages" --jq .html_url)"
 say "Live at: $URL"
-echo "(If it shows a 404, wait a minute and refresh; the first publish can lag.)"
-echo "If a run in the Actions tab shows as cancelled or failed from the first push, that's expected."
+echo "(Give it a minute if you still see the old version; GitHub's cache can lag.)"
