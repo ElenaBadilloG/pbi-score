@@ -112,4 +112,4 @@ After editing the page, run `python3 build_artifact.py` if you also maintain the
 
 ## Privacy
 
-The app has no analytics, cookies, or network requests beyond loading its own files, which is what keeps the on-page statement "No patient data entered here leaves this page" true. Keep it that way if you add anything (fonts, analytics, CDNs).
+The app has no analytics, cookies, or network requests beyond loading its own files, so nothing entered or loaded ever leaves the browser. That is what makes the note on the CSV tab ("The file is read in this browser and never uploaded") true. Keep it that way if you add anything (fonts, analytics, CDNs).
